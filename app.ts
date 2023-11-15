@@ -1,6 +1,8 @@
 import express, { Application } from "express";
 import cors from "cors";
 import { json } from "body-parser";
+
+
 import { productRouter } from "./routes/products.routes";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
@@ -34,6 +36,28 @@ const swaggerOptions = {
       },
       version: "1.0.0",
       servers: ["http://localhost:3000"],
+    },
+    components: {
+      schemas: {
+        ProductBody: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              example: 'Miód Rzepakowy',
+            },
+            price: {
+              type: 'number',
+              example: 45.00,
+            },
+            description: {
+              type: 'string',
+              example: 'Smaczny miód rzepakowy',
+            },
+          },
+          required: ['name', 'price'],
+        },
+      },
     },
   },
   apis: ["./routes/*.ts"],
