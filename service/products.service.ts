@@ -1,14 +1,10 @@
 import { Product } from "../models/products.models";
+import { ProductBody } from "../types/products.types";
 
-interface ProductBody {
-  name: string;
-  price: number;
-  description: string;
-}
 export const addProduct = async (
   name: string,
   price: number,
-  description: string
+  description?: string
 ): Promise<ProductBody> => {
   const newProduct = await Product.create({
     name,
