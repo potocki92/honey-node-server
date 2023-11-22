@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import * as Joi from "joi";
 import { addProduct, getProducts } from "../service/products.service";
+import { ProductRequest, ProductBody } from "../types/products.types";
+import mongoose, { Error } from "mongoose";
+import { productSchema } from "../utils/validation";
+
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
     const products = await getProducts();
@@ -8,55 +11,65 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
     return res.json({
       status: res.statusCode,
-      message: "All Products",
-      products: products,
+      data: {
+        message: "All Products",
+        products: products,
+      },
     });
   } catch (err) {
     console.error(err);
+    res.status(500).json({
+      error: "Internal Server Error",
+    });
   }
 };
 
-interface ProductBody {
-  name: string;
-  price: number;
-  description: string;
-}
-
-interface ProductRequest extends Request {
-  body: ProductBody;
-}
 export const createProduct = async (
   req: ProductRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { name, price, description } = req.body;
-    const schema: Joi.ObjectSchema<any> = Joi.object({
-      name: Joi.string().required(),
-      price: Joi.number().required(),
-      description: Joi.string(),
-    });
+    const { body } = req;
 
-    const { error } = schema.validate({ name, price, description });
-
-    if (error) {
-      res.status(400).json({
-        message: `Missing required fields: ${error.details[0].context?.key}`,
-      });
-      return;
-    }
-
-    const newProduct: ProductBody = await addProduct(name, price, description);
-
-    console.log(newProduct);
+    await productSchema.validateAsync(body, { abortEarly: false });
+    const newProduct: ProductBody = await addProduct(
+      body.name,
+      body.price,
+      body.description
+    );
 
     res.status(201).json({
-      message: "Successfully created a new product.",
-      product: newProduct,
+      status: 201,
+      statusText: "Created",
+      data: {
+        product: newProduct,
+      },
     });
-    console.table(newProduct);
-  } catch (err) {
+  } catch (err: any) {
+    handleValidationError(err, res, next);
+  }
+};
+const handleValidationError = (
+  err: Error,
+  res: Response,
+  next: NextFunction
+) => {
+  if (err instanceof mongoose.Error.ValidationError) {
+    const validationErrors: Record<string, string> = {};
+    for (const field in err.errors) {
+      if (err.errors.hasOwnProperty(field)) {
+        validationErrors[field] = err.errors[field as keyof Error].message;
+      }
+    }
+    console.log(validationErrors);
+
+    res.status(400).json({
+      message: "Mongoose validation failed",
+      errors: validationErrors,
+    });
+  } else {
+    console.error(err);
     next(err);
   }
 };
