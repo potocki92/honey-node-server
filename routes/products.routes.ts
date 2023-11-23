@@ -1,6 +1,8 @@
 import express from "express";
 import {
   createProduct,
+  deleteProduct,
+  findProduct,
   getAllProducts,
 } from "../controllers/products.controller";
 
@@ -79,4 +81,115 @@ router.get("/", getAllProducts);
  *               message: "Missing required fields: name"
  */
 router.post("/", createProduct);
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   get:
+ *     summary: Get product by id
+ *     description: Retrieve product from the database
+ *     tags:
+ *       - Products
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: ID of the product to retrieve.
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: 65553668b5ebc4bd2fce49e7
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: Error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.get("/:id", findProduct);
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   delete:
+ *     summary: Delete a product by ID
+ *     description: Delete a product by its ID.
+ *     tags:
+ *       - Products
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: ID of the product to delete.
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: 65553668b5ebc4bd2fce49e7
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: Success
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: Transaction deleted successfully
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: Not Found
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Transaction not found
+ *       500:
+ *         description: Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: Error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Server error
+ */
+router.delete("/:id", deleteProduct);
 export { router as productRouter };
