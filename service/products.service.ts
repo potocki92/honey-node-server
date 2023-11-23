@@ -28,3 +28,21 @@ export const getProducts = async () => {
     throw err;
   }
 };
+
+export const deleteProductById = async (productId: string) => {
+  try {
+    return await Product.findByIdAndDelete(productId);
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+export const getProductById = async (productId: string) => {
+  try {
+    return await Product.findById(productId);
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
