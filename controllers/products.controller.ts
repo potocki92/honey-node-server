@@ -1,10 +1,19 @@
-import { Request, Response, NextFunction } from "express";
-import { addProduct, getProducts } from "../service/products.service";
+import { Response, NextFunction, Request } from "express";
+import {
+  addProduct,
+  deleteProductById,
+  getProductById,
+  getProducts,
+} from "../service/products.service";
 import { ProductRequest, ProductBody } from "../types/products.types";
-import mongoose, { Error } from "mongoose";
-import { productSchema } from "../utils/validation";
+import { productValidation } from "../utils/validation";
+import { handleProductNotFound, handleValidationError } from "../utils/error";
 
-export const getAllProducts = async (req: Request, res: Response) => {
+export const getAllProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const products = await getProducts();
     console.log(products);
@@ -32,7 +41,7 @@ export const createProduct = async (
   try {
     const { body } = req;
 
-    await productSchema.validateAsync(body, { abortEarly: false });
+    await productValidation.validateAsync(body, { abortEarly: false });
     const newProduct: ProductBody = await addProduct(
       body.name,
       body.price,
@@ -40,7 +49,6 @@ export const createProduct = async (
     );
 
     res.status(201).json({
-      status: 201,
       statusText: "Created",
       data: {
         product: newProduct,
@@ -50,25 +58,43 @@ export const createProduct = async (
     handleValidationError(err, res, next);
   }
 };
-const handleValidationError = (
-  err: Error,
+
+export const findProduct = async (
+  req: Request,
   res: Response,
   next: NextFunction
-) => {
-  if (err instanceof mongoose.Error.ValidationError) {
-    const validationErrors: Record<string, string> = {};
-    for (const field in err.errors) {
-      if (err.errors.hasOwnProperty(field)) {
-        validationErrors[field] = err.errors[field as keyof Error].message;
-      }
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const product = await getProductById(id);
+    if (handleProductNotFound(res, id, product)) {
+      return;
     }
-    console.log(validationErrors);
-
-    res.status(400).json({
-      message: "Mongoose validation failed",
-      errors: validationErrors,
+    console.log(product);
+    res.status(200).json({
+      data: {
+        product,
+      },
     });
-  } else {
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+};
+
+export const deleteProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const product = await deleteProductById(id);
+    if (handleProductNotFound(res, id, product)) {
+      return;
+    }
+    res.status(200).json({ message: "Produkt został prawidłowo usunięty" });
+  } catch (err) {
     console.error(err);
     next(err);
   }
