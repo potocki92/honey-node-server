@@ -6,5 +6,6 @@ export type ProductBody = {
   description?: string;
 };
 
-export type ProductRequest = Request<{}, {}, ProductBody> & { body: ProductBody };
-
+export type ProductRequest = Request<{}, {}, ProductBody> & {
+  body: ProductBody;
+};
